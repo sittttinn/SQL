@@ -395,3 +395,6 @@ ORDER BY CNT DESC
 - 조건을 설정하고 싶은 경우: WHERE/ HAVING
 - 정렬하고 싶은 경우: ORDER BY
 - 출력 개수를 제한하고 싶은 경우: LIMIT
+
+
+<img width="409" alt="image" src="https://github.com/user-attachments/assets/96973df5-fa00-46cf-8f33-b9fbd1bad1e5" />
