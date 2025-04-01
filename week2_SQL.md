@@ -321,4 +321,198 @@ WHERE
 SELECT
 	trainer_id
 	COUNT (pokemon_id)
+	COUNT (DISTINCT pokemon_id) AS pokemon_cnt2
+FROM basic.trainer_pokemon
+GROUP BY
+	trainer_id
 ```
+
+```sql
+SELECT
+	*
+FROM basic.trainer_pokemon
+WHERE
+	trainer_id = 5
+```
+
+## 16. 포켓몬을 많이 풀어준 트레이너는 누구일까요?
+
+- 테이블: trainer_pokemon
+- 조건: status = “Released” (풀어준)
+- 컬럼: trainer_id
+- 집계: 많이 풀어준 ⇒ count
+
+```sql
+SELECT
+	trainer_id
+	COUNT (pokemon_id) AS pokemon_cnt
+FROM basic.trainer_pokemon
+WHERE
+	status = "Released"
+GROUP BY
+	trainer_id
+ORDER BY
+	pokemon_cnt DESC
+LIMIT 1
+```
+
+## 17. 트레이너 별로 풀어준 포켓몬의 비율이 20%가 넘는 포켓몬 트레이너는 누구일까요?
+
+풀어준 포켓몬의 비율 = (풀어준 포켓몬 수/전체 포켓몬의 수)
+
+*hint: countif
+
+- 테이블: trainer_pokemon
+- 조건: 풀어준 포켓몬의 비율이 20%가 넘는다
+- 컬럼: trainer_id,
+- 집계: countif
+- countif(조건) : countif(컬럼 = “3”) - 특정 컬럼 상태 확인 가능
+
+```sql
+SELECT
+-- countif(trainer_id=17)
+	count(id)
+FROM basic.trainer_pokemon
+WHERE
+	trainer_id=17
+```
+
+```sql
+SELECT
+	trainer_id
+	COUNTIF (stauts="Release") AS released_cnt, #풀어준 포켓몬의 수
+	COUNT (pokemon_id) AS pokemon_cnt
+	COUNTIF (stauts="Release") / COUNT(pokemon_id) AS released_ratio
+FROM basic.trainer_pokemon
+GROUP BY
+	trainer_id
+HAVING
+	released_ration >= 0.2
+```
+
+---
+
+## 정리
+![image](https://github.com/user-attachments/assets/dcefa4e9-fe7b-415d-851e-d395cdfaa210)
+
+- order by
+- limit
+- null
+- in
+- like
+- select from - 서브커리
+- distinct
+
+[추후]
+
+잘 작성하는 방법
+
+어떤 흐름으로 짜야하는가
+
+어떻게 템플릿을 쉽게 쓸 수 있는가
+
+---
+
+## 추가 함수 - GROUP BY ALL
+
+그룹화 키를 추론해서 자동으로 컬럼에 안써도 되게 해준다
+
+```sql
+WITH PlayerStats AS (
+	SELECT "Adams" as LastName, 'Noam' as FirstName, 3 as PointScored UNION ALL
+	SELECT 'Buchana', 'Jie', 0 UNION ALL
+	SELECT 'Coolidge', 'Kiren', 1 UNION ALL
+	SELECT 'Adams', 'Noam', 4 UNION ALL
+	SELECT 'Buchanan', 'Jie', 13)
+
+SELECT
+	 FirstName AS first_names,
+	 LastName As last_names,
+	 SUM(PointScored) AS total_points
+FROM PlayerStats
+GROUP BY
+			firstname,
+			lastname,
+			다른 컬럼
+```
+
+변경 후,
+
+```sql
+WITH PlayerStats AS (
+	SELECT "Adams" as LastName, 'Noam' as FirstName, 3 as PointScored UNION ALL
+	SELECT 'Buchana', 'Jie', 0 UNION ALL
+	SELECT 'Coolidge', 'Kiren', 1 UNION ALL
+	SELECT 'Adams', 'Noam', 4 UNION ALL
+	SELECT 'Buchanan', 'Jie', 13)
+
+SELECT
+	 FirstName AS first_names,
+	 LastName As last_names,
+	 SUM(PointScored) AS total_points
+FROM PlayerStats
+GROUP BY ALL
+```
+
+---
+
+---
+
+# 3. SQL 쿼리 잘 작성하기, 쿼리 작성 템플릿 및 오류를 잘 디버깅 하기
+
+- SQL 쿼리 작성 흐름
+- 쿼리 작성 템플릿과 생산성 도구 (테이블, 조건, 칼럼, 집계)
+- 오류를 디버깅하는 법
+    - 오류를 어떻게 해결해야하는지
+
+## 3-2. SQL 쿼리 작성하는 흐름
+
+(1) 지표 고민 - 어떤 문제를 해결하기 위해 데이터가 필요한가?
+
+(2) 지표 구체화 - 추상적이지 않고 구체적인 지표 명시(분자, 분모 표시 - 이름을 구체적으로 작성 필요)
+
+(3) 지표 탐색 - 유사한 문제를 해결한 케이스가 있나 확인 - 존재 → 해당 쿼리 리뷰
+
+→ 없을 경우, 쿼리 작성 (효율적)
+
+(4) 쿼리 작성 - 데이터가 있는 테이블 찾기 - 1개(바로 활용)/ 2개 이상 (연결 방법 고민 join)
+
+(5) 데이터 정합성 확인 - 예상한 결과와 동일한지 확인
+
+(6) 쿼리 가독성 - 나중을 위해 깔끔하게 쿼리 작성
+
+(7) 쿼리 저장 - 쿼리는 재사용되므로 문서로 저장
+
+---
+
+## 3.3 쿼리 작성 템플릿과 생산성 도구
+
+### 쿼리 작성 템플릿
+
+- 쿼리를 작성하는 목표, 확인할 지표: 정의 작성
+- 쿼리 계산 방법: 집계를 하는가, 컬럼을 쓰면 되는가, 어떻게 하면 되는가
+- 데이터의 기간: 데이터가 작아서 기간을 굳이 따지지 않지만 회사에서 중요함
+- 사용할 테이블:
+- join key: 지금은 안배워서 괜찮지만 두 개 이상 데이터를 사용할 때 필요
+- 데이터 특징: 어떤 컬럼은 어떤 값을 가지고 있는지
+
+```sql
+SELECT
+
+FROM
+WHERE
+```
+
+### 생산성 도구: 템플릿 쉽게 사용하기
+
+- 템플릿을 사용하자! 라고 제시하면 생기는 일
+- 습관 형성이 중요
+
+### 생산성 도구: Espanso
+
+- 특정단어를 입력하면 원하는 문장으로 변경
+    - Match
+        - trigger “:date”
+- trigger 단어 입력 - 채우기
+
+![image](https://github.com/user-attachments/assets/a7e4c839-b1a5-4829-a713-ef16b581f277)
