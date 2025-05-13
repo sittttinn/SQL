@@ -526,3 +526,5 @@ ON t1.key=t2.key
     - left/right
     - full
     - cross
+ 
+![image](https://github.com/user-attachments/assets/aed4597d-5906-4c7b-93ec-b1e9ba68ead2)
